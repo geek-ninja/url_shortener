@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Google Auth</title>
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <!-- Firebase Auth -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <h2>Firebase Google Authentication</h2>
+    <button id="googleSignIn">Sign in with Google</button>
+    <button id="signOut" style="display: none;">Sign Out</button>
+    <button id="signOut" style="display: none;">verify</button>
+    <div id="userDetails" style="display: none;">
+        <h3>User Details:</h3>
+        <p id="userName"></p>
+        <p id="userEmail"></p>
+        <p>ID Token:</p>
+        <textarea id="idToken" rows="5" cols="50" readonly></textarea>
+    </div>
+
+    <script>
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCdyPtJXX9A0hIw4LyfxCiP7_3Nep03lB8",
+            authDomain: "my-website-eb5d5.firebaseapp.com",
+            databaseURL: "https://my-website-eb5d5.firebaseio.com",
+            projectId: "my-website-eb5d5",
+            storageBucket: "my-website-eb5d5.firebasestorage.app",
+            messagingSenderId: "1891559028",
+            appId: "1:1891559028:web:b68c1b83000b9a204b5321",
+            measurementId: "G-3T6MC87EN3"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Get DOM elements
+        const googleSignInBtn = document.getElementById('googleSignIn');
+        const signOutBtn = document.getElementById('signOut');
+        const userDetails = document.getElementById('userDetails');
+        const userName = document.getElementById('userName');
+        const userEmail = document.getElementById('userEmail');
+        const idTokenElement = document.getElementById('idToken');
+
+        // Google Sign-in provider
+        const provider = new firebase.auth.GoogleAuthProvider();
+
+        // Sign in with Google
+        googleSignInBtn.addEventListener('click', () => {
+            firebase.auth().signInWithPopup(provider)
+                .then((result) => {
+                    // Get ID token
+                    return result.user.getIdToken();
+                })
+                .then((idToken) => {
+                    displayUserInfo(firebase.auth().currentUser, idToken);
+                    
+                    // Optional: Send token to your backend
+                    // sendTokenToBackend(idToken);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert('Error signing in: ' + error.message);
+                });
+        });
+
+        // Sign out
+        signOutBtn.addEventListener('click', () => {
+            firebase.auth().signOut()
+                .then(() => {
+                    googleSignInBtn.style.display = 'block';
+                    signOutBtn.style.display = 'none';
+                    userDetails.style.display = 'none';
+                    idTokenElement.value = '';
+                })
+                .catch((error) => {
+                    console.error('Error signing out:', error);
+                });
+        });
+
+        // Display user information
+        function displayUserInfo(user, idToken) {
+            userName.textContent = 'Name: ' + user.displayName;
+            userEmail.textContent = 'Email: ' + user.email;
+            idTokenElement.value = idToken;
+            
+            googleSignInBtn.style.display = 'none';
+            signOutBtn.style.display = 'block';
+            userDetails.style.display = 'block';
+        }
+
+        // Optional: Function to send token to your backend
+        function sendTokenToBackend(idToken) {
+            fetch('localhost:3000/users/signIn', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ idToken: idToken })
+            })
+            .then(response => response.json())
+            .then(data => console.log('Success:', data))
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Check if user is already signed in
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                user.getIdToken().then(idToken => {
+                    displayUserInfo(user, idToken);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

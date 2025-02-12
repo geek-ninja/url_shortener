@@ -1,0 +1,462 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "URL Shortener docs"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/",
+      "description": "local server"
+    }
+  ],
+  "paths": {
+    "/api/user/signIn": {
+      "post": {
+        "summary": "Authenticate user with Google Sign-In",
+        "description": "Verifies the Google ID token and creates a user session.",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "idToken": {
+                    "type": "string",
+                    "description": "Google ID token obtained from client-side authentication."
+                  }
+                },
+                "required": ["idToken"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User authenticated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "JWT token for session authentication."
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "_id": { "type": "string" },
+                        "googleId": { "type": "string" },
+                        "email": { "type": "string" },
+                        "name": { "type": "string" },
+                        "profilePicture": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Missing ID token."
+          },
+          "500": {
+            "description": "Internal server error - Authentication failed."
+          }
+        }
+      }
+    },
+    "/api/shorten": {
+      "post": {
+        "summary": "Create a new short URL",
+        "description": "Generates a short URL for a provided long URL. Optionally, a custom alias and topic can be provided. The short URL is associated with the authenticated user.",
+        "tags": ["URL Shortening"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "longUrl": {
+                    "type": "string",
+                    "description": "The original long URL that needs to be shortened."
+                  },
+                  "customAlias": {
+                    "type": "string",
+                    "description": "An optional custom alias for the short URL."
+                  },
+                  "topic": {
+                    "type": "string",
+                    "description": "An optional topic/category to group the URL."
+                  }
+                },
+                "required": ["longUrl"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Short URL successfully created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "shortUrl": {
+                      "type": "string",
+                      "description": "The newly created short URL."
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Timestamp of when the short URL was created."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid or missing parameters."
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid JWT token."
+          },
+          "500": {
+            "description": "Internal server error - URL shortening failed."
+          }
+        }
+      }
+    },
+    "/api/shorten/{customAlias}": {
+      "get": {
+        "summary": "Redirect to the original URL",
+        "description": "Redirects the user to the original URL associated with the custom alias.",
+        "tags": ["URL Shortening"],
+        "parameters": [
+          {
+            "name": "customAlias",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The custom alias of the shortened URL."
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Successfully redirected to the original URL."
+          },
+          "404": {
+            "description": "URL does not exist for the given custom alias."
+          },
+          "500": {
+            "description": "Internal server error - Redirection failed."
+          }
+        }
+      }
+    },
+    "/api/analytics/{alias}": {
+      "get": {
+        "summary": "Retrieve detailed analytics for a specific short URL",
+        "description": "Provides insights into the performance of the specified short URL, including total clicks, unique users, and analytics broken down by OS type and device type.",
+        "tags": ["Analytics"],
+        "parameters": [
+          {
+            "name": "alias",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The custom alias of the shortened URL."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics data successfully retrieved for the short URL.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalClicks": {
+                      "type": "integer",
+                      "description": "Total number of clicks for the short URL."
+                    },
+                    "uniqueUsers": {
+                      "type": "integer",
+                      "description": "Number of unique users who accessed the short URL."
+                    },
+                    "clicksByDate": {
+                      "type": "array",
+                      "description": "An array of objects containing the date and click count for the last 7 days.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": {
+                            "type": "string",
+                            "format": "date",
+                            "description": "The date of the click data."
+                          },
+                          "clickCount": {
+                            "type": "integer",
+                            "description": "The number of clicks for the given date."
+                          }
+                        }
+                      }
+                    },
+                    "osType": {
+                      "type": "array",
+                      "description": "An array of objects containing OS type analytics.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "osName": {
+                            "type": "string",
+                            "description": "The name of the operating system (e.g., Windows, macOS, Linux, iOS, Android)."
+                          },
+                          "uniqueClicks": {
+                            "type": "integer",
+                            "description": "Number of unique clicks for the specified OS."
+                          },
+                          "uniqueUsers": {
+                            "type": "integer",
+                            "description": "Number of unique users who accessed the short URL using the specified OS."
+                          }
+                        }
+                      }
+                    },
+                    "deviceType": {
+                      "type": "array",
+                      "description": "An array of objects containing device type analytics.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "deviceName": {
+                            "type": "string",
+                            "description": "The type of device used (e.g., mobile, desktop)."
+                          },
+                          "uniqueClicks": {
+                            "type": "integer",
+                            "description": "Number of unique clicks for the specified device type."
+                          },
+                          "uniqueUsers": {
+                            "type": "integer",
+                            "description": "Number of unique users who accessed the short URL using the specified device."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The specified short URL alias does not exist."
+          },
+          "500": {
+            "description": "Internal server error - Unable to fetch analytics data."
+          }
+        }
+      }
+    },
+    "/api/analytics/topic/{topic}": {
+      "get": {
+        "summary": "Retrieve analytics for all short URLs grouped under a specific topic",
+        "description": "Allows users to assess the performance of their links based on categories or topics.",
+        "tags": ["Analytics"],
+        "parameters": [
+          {
+            "name": "topic",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The topic/category to group the short URLs under."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics data successfully retrieved for the topic.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalClicks": {
+                      "type": "integer",
+                      "description": "Total number of clicks across all URLs in the specified topic."
+                    },
+                    "uniqueUsers": {
+                      "type": "integer",
+                      "description": "Number of unique users who accessed URLs in the specified topic."
+                    },
+                    "clicksByDate": {
+                      "type": "array",
+                      "description": "An array of objects containing date and total click counts for all URLs under the topic.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": {
+                            "type": "string",
+                            "format": "date",
+                            "description": "The date of the click data."
+                          },
+                          "clickCount": {
+                            "type": "integer",
+                            "description": "The number of clicks for the given date."
+                          }
+                        }
+                      }
+                    },
+                    "urls": {
+                      "type": "array",
+                      "description": "An array of URLs under the specified topic.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "shortUrl": {
+                            "type": "string",
+                            "description": "The generated short URL."
+                          },
+                          "totalClicks": {
+                            "type": "integer",
+                            "description": "Total number of clicks for the short URL."
+                          },
+                          "uniqueUsers": {
+                            "type": "integer",
+                            "description": "Number of unique users who accessed the short URL."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No short URLs found for the specified topic."
+          },
+          "500": {
+            "description": "Internal server error - Unable to fetch topic analytics."
+          }
+        }
+      }
+    },
+    "/api/analytics/overall/url": {
+      "get": {
+        "summary": "Retrieve overall analytics for all short URLs created by the authenticated user",
+        "description": "Provides a comprehensive view of the user's link performance, including total clicks, unique users, and analytics broken down by OS type and device type.",
+        "tags": ["Analytics"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Overall analytics data successfully retrieved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalUrls": {
+                      "type": "integer",
+                      "description": "Total number of short URLs created by the user."
+                    },
+                    "totalClicks": {
+                      "type": "integer",
+                      "description": "Total number of clicks across all URLs created by the user."
+                    },
+                    "uniqueUsers": {
+                      "type": "integer",
+                      "description": "Total number of unique users who accessed any of the user's short URLs."
+                    },
+                    "clicksByDate": {
+                      "type": "array",
+                      "description": "An array of objects containing date and total click counts for all URLs.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": {
+                            "type": "string",
+                            "format": "date",
+                            "description": "The date of the click data."
+                          },
+                          "clickCount": {
+                            "type": "integer",
+                            "description": "The number of clicks for the given date."
+                          }
+                        }
+                      }
+                    },
+                    "osType": {
+                      "type": "array",
+                      "description": "An array of objects containing OS type analytics.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "osName": {
+                            "type": "string",
+                            "description": "The name of the operating system (e.g., Windows, macOS, Linux, iOS, Android)."
+                          },
+                          "uniqueClicks": {
+                            "type": "integer",
+                            "description": "Number of unique clicks for the specified OS."
+                          },
+                          "uniqueUsers": {
+                            "type": "integer",
+                            "description": "Number of unique users who accessed any URL using the specified OS."
+                          }
+                        }
+                      }
+                    },
+                    "deviceType": {
+                      "type": "array",
+                      "description": "An array of objects containing device type analytics.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "deviceName": {
+                            "type": "string",
+                            "description": "The type of device used (e.g., mobile, desktop)."
+                          },
+                          "uniqueClicks": {
+                            "type": "integer",
+                            "description": "Number of unique clicks for the specified device type."
+                          },
+                          "uniqueUsers": {
+                            "type": "integer",
+                            "description": "Number of unique users who accessed the short URL using the specified device."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - Unable to fetch overall analytics."
+          }
+        }
+      }
+    }
+  }
+}
