@@ -12,6 +12,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+//base route
+app.get("/", (req, res) => {
+  res.send("Welcome to url shortener");
+});
+
 //routes
 app.use("/api/user", userRoutes);
 app.use("/api/shorten", urlRoutes);
