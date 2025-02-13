@@ -5,6 +5,10 @@
   },
   "servers": [
     {
+      "url":"https://url-shortener-begm.onrender.com",
+      "description":"deployed server"
+    },
+    {
       "url": "http://localhost:3000/",
       "description": "local server"
     }

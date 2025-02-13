@@ -17,5 +17,4 @@ app.use("/api/user", userRoutes);
 app.use("/api/shorten", urlRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
 module.exports = app;
