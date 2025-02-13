@@ -49,7 +49,7 @@ This application allows multiple users to create shorten URLs and track analytic
    - Create an account for free (https://redis.io/try-free/) and get your credentials for node.js.
 6. Setting firebase project:
    - Create an account in firebase and create a project and allow necessary permissions to use signin with google popup to get idtoken.
-     ![](client.png)
+     ![](client_side.png)
 
 ## Running the Project
 
@@ -168,6 +168,8 @@ This application allows multiple users to create shorten URLs and track analytic
   ]
 }
 ```
+
+![](testing.png)
 
 ## Deployment
 
