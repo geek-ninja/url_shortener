@@ -1,120 +1,375 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase Google Auth</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>URL Shorten</title>
+
+    <style>
+        *{
+            overflow-x: hidden;
+        }
+        body{
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        #urlShortForm{
+             display: flex;
+             flex-direction: column;
+             gap: 4px;
+             width: 400px;
+        }
+        #urlRedirectShortForm{
+            display: flex;
+             flex-direction: column;
+             gap: 4px;
+             width: 400px;
+             margin-top: 12px;
+        }
+        .resForm{
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+             width: 400px;
+             margin-top: 12px;
+        }
+        .hide{
+            display: none;
+        }
+    </style>
     <!-- Firebase App (the core Firebase SDK) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <!-- Firebase Auth -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-</head>
-<body>
-    <h2>Firebase Google Authentication</h2>
+  </head>
+  <body>
+    <h2>URL Shortener</h2>
     <button id="googleSignIn">Sign in with Google</button>
-    <button id="signOut" style="display: none;">Sign Out</button>
-    <button id="signOut" style="display: none;">verify</button>
-    <div id="userDetails" style="display: none;">
-        <h3>User Details:</h3>
-        <p id="userName"></p>
-        <p id="userEmail"></p>
-        <p>ID Token:</p>
-        <textarea id="idToken" rows="5" cols="50" readonly></textarea>
+    <button id="signOut" style="display: none">Sign Out</button>
+    <button id="signOut" style="display: none">verify</button>
+    <div id="userDetails" style="display: none">
+        <h3 class="hide">User Details:</h3>
+        <p class="hide" id="userName"></p>
+        <p class="hide" id="userEmail"></p>
+        <p class="hide">ID Token:</p>
+      <textarea class="hide" id="idToken" rows="5" cols="50" readonly></textarea>
+    </div>
+    <div>
+      <div>
+        <form id="urlShortForm">
+          <label>Long url</label>
+          <input type="text" id="longUrl" placeholder="enter the long url" />
+          <label>Custom alias</label>
+          <input
+            type="text"
+            id="customAlias"
+            placeholder="enter the custom alias"
+          />
+          <label>Topic</label>
+          <input type="text" id="topic" placeholder="enter the topic" />
+          <button type="submit">Submit</button>
+        </form>
+      </div>
+      <div>
+        <form id="urlRedirectShortForm">
+          <label>Enter Custom alias for redirect</label>
+          <input
+            type="text"
+            id="customAliasRedirect"
+            placeholder="enter the custom alias"
+          />
+          <button type="submit">Redirect</button>
+        </form>
+      </div>
+
+      <h1>analysis</h1>
+      <div>
+        <form id="urlAnalyticsShortForm" class="resForm">
+          <label>Enter Custom alias for analysis</label>
+          <div>
+              <input
+                type="text"
+                id="customAliasAnalytics"
+                placeholder="enter the custom alias"
+              />
+              <button type="submit">send</button>
+          </div>
+        </form>
+      </div>
+
+      <div>
+        <form id="urlAnalyticsTopicShortForm" class="resForm">
+          <label>Enter topic for analysis</label>
+          <div>
+              <input
+                type="text"
+                id="customAliasAnalyticsTopic"
+                placeholder="enter the topic"
+              />
+              <button type="submit">send</button>
+          </div>
+        </form>
+      </div>
+
+      <div style="margin-top: 4px;">
+        <form id="urlAnalyticsOveralShortForm" class="resForm">
+          <label>Overal analysis</label>
+          <button type="submit">send</button>
+        </form>
+      </div>
+
+      <div><textarea id="res" rows="5" cols="51" readonly></textarea></div>
     </div>
 
     <script>
-        // Your Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyCdyPtJXX9A0hIw4LyfxCiP7_3Nep03lB8",
-            authDomain: "my-website-eb5d5.firebaseapp.com",
-            databaseURL: "https://my-website-eb5d5.firebaseio.com",
-            projectId: "my-website-eb5d5",
-            storageBucket: "my-website-eb5d5.firebasestorage.app",
-            messagingSenderId: "1891559028",
-            appId: "1:1891559028:web:b68c1b83000b9a204b5321",
-            measurementId: "G-3T6MC87EN3"
-        };
+      // Your Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyCdyPtJXX9A0hIw4LyfxCiP7_3Nep03lB8",
+        authDomain: "my-website-eb5d5.firebaseapp.com",
+        databaseURL: "https://my-website-eb5d5.firebaseio.com",
+        projectId: "my-website-eb5d5",
+        storageBucket: "my-website-eb5d5.firebasestorage.app",
+        messagingSenderId: "1891559028",
+        appId: "1:1891559028:web:b68c1b83000b9a204b5321",
+        measurementId: "G-3T6MC87EN3",
+      };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
 
-        // Get DOM elements
-        const googleSignInBtn = document.getElementById('googleSignIn');
-        const signOutBtn = document.getElementById('signOut');
-        const userDetails = document.getElementById('userDetails');
-        const userName = document.getElementById('userName');
-        const userEmail = document.getElementById('userEmail');
-        const idTokenElement = document.getElementById('idToken');
+      // Get DOM elements
+      const googleSignInBtn = document.getElementById("googleSignIn");
+      const signOutBtn = document.getElementById("signOut");
+      const userDetails = document.getElementById("userDetails");
+      const userName = document.getElementById("userName");
+      const userEmail = document.getElementById("userEmail");
+      const idTokenElement = document.getElementById("idToken");
+      const resBoxElement = document.getElementById("res");
 
-        // Google Sign-in provider
-        const provider = new firebase.auth.GoogleAuthProvider();
+      // Google Sign-in provider
+      const provider = new firebase.auth.GoogleAuthProvider();
 
-        // Sign in with Google
-        googleSignInBtn.addEventListener('click', () => {
-            firebase.auth().signInWithPopup(provider)
-                .then((result) => {
-                    // Get ID token
-                    return result.user.getIdToken();
-                })
-                .then((idToken) => {
-                    displayUserInfo(firebase.auth().currentUser, idToken);
-                    
-                    // Optional: Send token to your backend
-                    // sendTokenToBackend(idToken);
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    alert('Error signing in: ' + error.message);
-                });
-        });
+      // Sign in with Google
+      googleSignInBtn.addEventListener("click", () => {
+        firebase
+          .auth()
+          .signInWithPopup(provider)
+          .then((result) => {
+            // Get ID token
+            return result.user.getIdToken();
+          })
+          .then((idToken) => {
+            displayUserInfo(firebase.auth().currentUser, idToken);
 
-        // Sign out
-        signOutBtn.addEventListener('click', () => {
-            firebase.auth().signOut()
-                .then(() => {
-                    googleSignInBtn.style.display = 'block';
-                    signOutBtn.style.display = 'none';
-                    userDetails.style.display = 'none';
-                    idTokenElement.value = '';
-                })
-                .catch((error) => {
-                    console.error('Error signing out:', error);
-                });
-        });
+            // Optional: Send token to your backend
+            // sendTokenToBackend(idToken);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Error signing in: " + error.message);
+          });
+      });
 
-        // Display user information
-        function displayUserInfo(user, idToken) {
-            userName.textContent = 'Name: ' + user.displayName;
-            userEmail.textContent = 'Email: ' + user.email;
-            idTokenElement.value = idToken;
-            
-            googleSignInBtn.style.display = 'none';
-            signOutBtn.style.display = 'block';
-            userDetails.style.display = 'block';
+      // Sign out
+      signOutBtn.addEventListener("click", () => {
+        firebase
+          .auth()
+          .signOut()
+          .then(() => {
+            googleSignInBtn.style.display = "block";
+            signOutBtn.style.display = "none";
+            userDetails.style.display = "none";
+            idTokenElement.value = "";
+          })
+          .catch((error) => {
+            console.error("Error signing out:", error);
+          });
+      });
+
+      // Display user information
+      function displayUserInfo(user, idToken) {
+        userName.textContent = "Name: " + user.displayName;
+        userEmail.textContent = "Email: " + user.email;
+        idTokenElement.value = idToken;
+
+        googleSignInBtn.style.display = "none";
+        signOutBtn.style.display = "block";
+        userDetails.style.display = "block";
+      }
+
+      // Optional: Function to send token to your backend
+      function sendTokenToBackend(idToken) {
+        fetch("localhost:3000/users/signIn", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ idToken: idToken }),
+        })
+          .then((response) => response.json())
+          .then((data) => console.log("Success:", data))
+          .catch((error) => console.error("Error:", error));
+      }
+
+      // Check if user is already signed in
+      firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+          user.getIdToken().then((idToken) => {
+            displayUserInfo(user, idToken);
+          });
         }
+      });
 
-        // Optional: Function to send token to your backend
-        function sendTokenToBackend(idToken) {
-            fetch('localhost:3000/users/signIn', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ idToken: idToken })
-            })
-            .then(response => response.json())
-            .then(data => console.log('Success:', data))
-            .catch(error => console.error('Error:', error));
-        }
+      
+      document.getElementById("urlAnalyticsOveralShortForm").addEventListener("submit",function(event){
+        event.preventDefault();
+         // Define the API endpoint and Bearer Token
+         const apiEndpoint =
+            `https://url-shortener-begm.onrender.com/api/analytics/overall/url`; // Replace with your actual API endpoint
+          const bearerToken = idTokenElement.value; // Replace with your actual Bearer token
 
-        // Check if user is already signed in
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                user.getIdToken().then(idToken => {
-                    displayUserInfo(user, idToken);
-                });
+          // Send the API request using Fetch API
+          fetch(apiEndpoint, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${bearerToken}`,
             }
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("API Response:", data);
+              resBoxElement.value = JSON.stringify(data);
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+      });
+      
+      document.getElementById("urlAnalyticsTopicShortForm").addEventListener("submit",function(event){
+        event.preventDefault();
+        const inputTopic = document.getElementById("customAliasAnalyticsTopic").value;
+         // Define the API endpoint and Bearer Token
+         const apiEndpoint =
+            `https://url-shortener-begm.onrender.com/api/analytics/topic/${inputTopic}`; // Replace with your actual API endpoint
+          const bearerToken = idTokenElement.value; // Replace with your actual Bearer token
+
+          // Send the API request using Fetch API
+          fetch(apiEndpoint, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${bearerToken}`,
+            }
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("API Response:", data);
+              resBoxElement.value = JSON.stringify(data);
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+      });
+
+      document.getElementById("urlAnalyticsShortForm").addEventListener("submit",function(event){
+        event.preventDefault();
+        const inputAlias = document.getElementById("customAliasAnalytics").value;
+         // Define the API endpoint and Bearer Token
+         const apiEndpoint =
+            `https://url-shortener-begm.onrender.com/api/analytics/${inputAlias}`; // Replace with your actual API endpoint
+          const bearerToken = idTokenElement.value; // Replace with your actual Bearer token
+
+          // Send the API request using Fetch API
+          fetch(apiEndpoint, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${bearerToken}`,
+            }
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("API Response:", data);
+              resBoxElement.value = JSON.stringify(data);
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+      });
+
+      document.getElementById("urlRedirectShortForm").addEventListener("submit",function(event){
+        event.preventDefault();
+        const inputAlias = document.getElementById("customAliasRedirect").value;
+         // Define the API endpoint and Bearer Token
+         const apiEndpoint =
+            `https://url-shortener-begm.onrender.com/api/shorten/${inputAlias}`; // Replace with your actual API endpoint
+          const bearerToken = idTokenElement.value; // Replace with your actual Bearer token
+
+          // Send the API request using Fetch API
+          fetch(apiEndpoint, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${bearerToken}`,
+            }
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("API Response:", data);
+              resBoxElement.value = JSON.stringify(data);
+              if(data){
+                  window.location.href = data.redirectUrl;
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+      });
+      // Add event listener to the form submission
+      document
+        .getElementById("urlShortForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault(); // Prevent the default form submission
+
+          // Gather input values
+          const input1 = document.getElementById("longUrl").value;
+          const input2 = document.getElementById("customAlias").value;
+          const input3 = document.getElementById("topic").value;
+
+          // Prepare the request data
+          const requestData = {
+            longUrl: input1,
+            customAlias: input2,
+            topic: input3,
+          };
+
+          // Define the API endpoint and Bearer Token
+          const apiEndpoint =
+            "https://url-shortener-begm.onrender.com/api/shorten"; // Replace with your actual API endpoint
+          const bearerToken = idTokenElement.value; // Replace with your actual Bearer token
+
+          // Send the API request using Fetch API
+          fetch(apiEndpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${bearerToken}`,
+            },
+            body: JSON.stringify(requestData),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("API Response:", data);
+              resBoxElement.value = JSON.stringify(data);
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
         });
     </script>
-</body>
+  </body>
 </html>
