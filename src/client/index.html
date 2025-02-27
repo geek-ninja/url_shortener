@@ -165,7 +165,7 @@
             displayUserInfo(firebase.auth().currentUser, idToken);
 
             // Optional: Send token to your backend
-            // sendTokenToBackend(idToken);
+            sendTokenToBackend(idToken);
           })
           .catch((error) => {
             console.error("Error:", error);
@@ -202,15 +202,16 @@
 
       // Optional: Function to send token to your backend
       function sendTokenToBackend(idToken) {
-        fetch("localhost:3000/users/signIn", {
+        fetch("https://url-shortener-begm.onrender.com/api/user/signIn", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
           },
           body: JSON.stringify({ idToken: idToken }),
         })
           .then((response) => response.json())
-          .then((data) => console.log("Success:", data))
+          .then((data) => resBoxElement.value = JSON.stringify(data))
           .catch((error) => console.error("Error:", error));
       }
 

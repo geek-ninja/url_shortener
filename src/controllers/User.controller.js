@@ -10,7 +10,7 @@ module.exports.googleSignIn = () => {
       }
       // Save user
       const user = {
-        googleId: req.user.uid,
+        googleId: req.user.user_id,
         email: req.user.email,
         name: req.user.name,
         profilePicture: req.user.picture,
